@@ -32,17 +32,23 @@ pub fn compute(equity_curve: &[EquityPoint], trades: &[Trade]) -> Metrics {
 
     let nr = returns.len() as f64;
     let mean_r = returns.iter().sum::<f64>() / nr;
-    let variance = returns.iter().map(|r| (r - mean_r).powi(2)).sum::<f64>() / nr;
+    let variance = if nr > 1.0 {
+        returns.iter().map(|r| (r - mean_r).powi(2)).sum::<f64>() / (nr - 1.0)
+    } else {
+        0.0
+    };
     let std_dev = variance.sqrt();
 
     let annualized_return = (1.0 + total_return).powf(252.0 / nr) - 1.0;
     let sharpe = if std_dev == 0.0 { 0.0 } else { mean_r / std_dev * 252.0_f64.sqrt() };
 
-    let downside_sq_sum: f64 = returns.iter()
-        .filter(|&&r| r < 0.0)
-        .map(|&r| r.powi(2))
-        .sum();
-    let downside_dev = (downside_sq_sum / nr).sqrt();
+    let downside_returns: Vec<f64> = returns.iter().filter(|&&r| r < 0.0).cloned().collect();
+    let n_down = downside_returns.len() as f64;
+    let downside_dev = if n_down == 0.0 {
+        0.0
+    } else {
+        (downside_returns.iter().map(|&r| r.powi(2)).sum::<f64>() / n_down).sqrt()
+    };
     let sortino = if downside_dev == 0.0 { 0.0 } else { mean_r / downside_dev * 252.0_f64.sqrt() };
 
     let mut peak = equity_curve[0].value;

@@ -27,12 +27,15 @@ impl Portfolio {
         match order.side {
             Side::Buy => {
                 if self.position_qty == 0.0 {
-                    let cost = order.qty * fill_price + commission;
-                    self.cash -= cost;
-                    self.position_qty = order.qty;
-                    self.position_cost = fill_price;
-                    self.position_entry_date = order.date;
-                    self.position_entry_commission = commission;
+                    let affordable_qty = ((self.cash - commission).max(0.0) / fill_price).min(order.qty);
+                    if affordable_qty > 0.0 {
+                        let cost = affordable_qty * fill_price + commission;
+                        self.cash -= cost;
+                        self.position_qty = affordable_qty;
+                        self.position_cost = fill_price;
+                        self.position_entry_date = order.date;
+                        self.position_entry_commission = commission;
+                    }
                 }
             }
             Side::Sell => {
