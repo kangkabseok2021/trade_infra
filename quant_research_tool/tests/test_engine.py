@@ -9,6 +9,9 @@ def test_bar_fields(sample_bars):
     assert b.open == 100.0
     assert b.high == 101.0
     assert b.low == 99.0
+    assert b.volume == 10_000.0
+    b1 = sample_bars[1]
+    assert b1.date == 86400
 
 
 def test_backtest_equity_curve_has_one_point_per_bar(sample_bars):
@@ -22,18 +25,19 @@ def test_flat_signal_no_trades(sample_bars):
     result = engine.run(sample_bars, [0.0] * 20, "TEST")
     assert result.metrics.num_trades == 0
     assert result.equity_curve[-1].value == pytest.approx(10_000.0, rel=1e-6)
+    assert all(ep.value == pytest.approx(10_000.0, rel=1e-6) for ep in result.equity_curve)
 
 
 def test_profitable_uptrend_signal(sample_bars):
     # Prices 100 → 110 over 20 bars; buy first 16, sell last 4
     engine = quant_engine.BacktestEngine(capital=10_000.0, slippage_bps=0.0, commission=0.0)
     result = engine.run(sample_bars, [1.0] * 16 + [-1.0] * 4, "TEST")
-    assert result.metrics.total_return > 0
+    assert result.metrics.total_return > 0.05
 
 
 def test_mismatched_lengths_raises(sample_bars):
     engine = quant_engine.BacktestEngine(capital=10_000.0, slippage_bps=0.0, commission=0.0)
-    with pytest.raises(Exception):
+    with pytest.raises(ValueError):
         engine.run(sample_bars, [1.0] * 5, "TEST")
 
 
