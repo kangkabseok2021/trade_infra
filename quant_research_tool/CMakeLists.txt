@@ -15,4 +15,11 @@ corrosion_set_env_vars(quant_engine
   "PYO3_PYTHON=${Python_EXECUTABLE}"
   "PYTHON_SYS_EXECUTABLE=${Python_EXECUTABLE}"
 )
-install(TARGETS quant_engine LIBRARY DESTINATION backtester)
+
+# Install the Rust-produced dynamic library into the backtester/ Python package
+# with a name Python's import machinery accepts (no "lib" prefix, .so suffix).
+install(
+  FILES "$<TARGET_FILE:quant_engine-shared>"
+  DESTINATION backtester
+  RENAME "quant_engine.${Python_SOABI}.so"
+)
