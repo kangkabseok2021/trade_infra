@@ -10,9 +10,10 @@ dependencies = [
     "fastapi",
     "uvicorn",
     "yfinance",
-    "httpx",
-    "pytest",
 ]
+
+[project.optional-dependencies]
+dev = ["httpx", "pytest"]
 
 [tool.scikit-build]
 cmake.version = ">=3.15"

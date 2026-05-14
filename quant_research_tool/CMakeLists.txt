@@ -15,4 +15,4 @@ corrosion_set_env_vars(quant_engine
   "PYO3_PYTHON=${Python_EXECUTABLE}"
   "PYTHON_SYS_EXECUTABLE=${Python_EXECUTABLE}"
 )
-corrosion_install(TARGETS quant_engine DESTINATION backtester)
+install(TARGETS quant_engine LIBRARY DESTINATION backtester)
