@@ -38,6 +38,9 @@ def strategy(
             df = yf.download(symbol, start=start, end=end, auto_adjust=True, progress=False)
             if df.empty:
                 raise ValueError(f"No data returned for {symbol} {start}–{end}")
+            # yfinance >= 0.2 returns MultiIndex columns for single-ticker downloads
+            if hasattr(df.columns, "levels"):
+                df.columns = df.columns.get_level_values(0)
             bars = [
                 _qe.Bar(
                     date=int(ts.timestamp()),
