@@ -1,0 +1,14 @@
+/target/
+backtester/*.so
+backtester/*.dylib
+backtester/*.dll
+.venv/
+__pycache__/
+*.egg-info/
+_skbuild/
+build/
+dist/
+node_modules/
+frontend/dist/
+.superpowers/
+Cargo.lock
