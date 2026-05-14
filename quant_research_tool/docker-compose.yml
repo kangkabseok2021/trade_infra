@@ -1,0 +1,25 @@
+services:
+  api:
+    build:
+      context: .
+      target: final
+    ports:
+      - "8000:8000"
+    environment:
+      - STRATEGY_MODULE=strategies.examples
+
+  # Development-only: hot-reload FastAPI + Vite dev server
+  api-dev:
+    build:
+      context: .
+      target: rust-builder
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backtester:/app/backtester
+      - ./strategies:/app/strategies
+    command: uvicorn backtester.api:app --host 0.0.0.0 --port 8000 --reload
+    environment:
+      - STRATEGY_MODULE=strategies.examples
+    profiles:
+      - dev
