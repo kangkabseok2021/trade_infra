@@ -24,6 +24,7 @@ pub struct MetricsPy {
 }
 
 #[pyclass]
+#[derive(Clone)]
 pub struct BacktestResult {
     #[pyo3(get)] pub equity_curve: Vec<EquityPoint>,
     #[pyo3(get)] pub trades: Vec<Trade>,
@@ -93,7 +94,7 @@ fn rsi(prices: Vec<f64>, period: usize) -> Vec<f64> {
 }
 
 #[pymodule]
-fn quant_engine(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
+fn quant_engine(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<Bar>()?;
     m.add_class::<EquityPoint>()?;
     m.add_class::<Trade>()?;
