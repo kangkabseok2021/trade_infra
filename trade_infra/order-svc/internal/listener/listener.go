@@ -76,7 +76,10 @@ func (l *Listener) evaluate(tick TickPayload) {
 }
 
 func (l *Listener) notify(orderID int64, node string, filledLMP, qty float64) {
-	payload := fmt.Sprintf(`{"order_id":%d,"node":%q,"filled_lmp":%f,"quantity_mw":%f}`,
-		orderID, node, filledLMP, qty)
-	l.db.Exec("SELECT pg_notify('order_updates', $1)", payload)
+	nodeJSON, _ := json.Marshal(node)
+	payload := fmt.Sprintf(`{"order_id":%d,"node":%s,"filled_lmp":%f,"quantity_mw":%f}`,
+		orderID, nodeJSON, filledLMP, qty)
+	if _, err := l.db.Exec("SELECT pg_notify('order_updates', $1)", payload); err != nil {
+		log.Printf("pg_notify order_updates order_id=%d: %v", orderID, err)
+	}
 }

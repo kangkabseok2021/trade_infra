@@ -1,5 +1,6 @@
 #include "db_writer.h"
 #include <stdexcept>
+#include <cstdio>
 
 DbWriter::DbWriter(const std::string& connstr) {
     conn_ = PQconnectdb(connstr.c_str());
@@ -11,9 +12,16 @@ DbWriter::DbWriter(const std::string& connstr) {
 }
 DbWriter::~DbWriter() { if (conn_) PQfinish(conn_); }
 
+// Format a double with locale-independent decimal point.
+static std::string fmt_double(double v) {
+    char buf[64];
+    std::snprintf(buf, sizeof(buf), "%.6g", v);
+    return buf;
+}
+
 void DbWriter::write_tick(const std::string& node, double lmp, double load_mw) {
-    std::string lmp_s  = std::to_string(lmp);
-    std::string load_s = std::to_string(load_mw);
+    std::string lmp_s  = fmt_double(lmp);
+    std::string load_s = fmt_double(load_mw);
     const char* params[] = { node.c_str(), lmp_s.c_str(), load_s.c_str() };
     PGresult* r = PQexecParams(conn_,
         "INSERT INTO price_ticks (node, lmp, load_mw) VALUES ($1,$2::numeric,$3::numeric)",
@@ -24,8 +32,11 @@ void DbWriter::write_tick(const std::string& node, double lmp, double load_mw) {
         throw std::runtime_error("INSERT failed: " + err);
     }
     PQclear(r);
-    // NOTIFY downstream listeners with JSON payload
+    // NOTIFY via pg_notify($1,$2) to avoid SQL injection through node/lmp values.
     std::string payload = "{\"node\":\"" + node + "\",\"lmp\":" + lmp_s + "}";
-    PGresult* nr = PQexec(conn_, ("NOTIFY price_ticks, '" + payload + "'").c_str());
+    const char* nparams[] = { "price_ticks", payload.c_str() };
+    PGresult* nr = PQexecParams(conn_,
+        "SELECT pg_notify($1, $2)",
+        2, nullptr, nparams, nullptr, nullptr, 0);
     PQclear(nr);
 }

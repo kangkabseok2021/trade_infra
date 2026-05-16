@@ -65,7 +65,11 @@ func (l *Listener) process(fill FillPayload) {
 	avgPrice := fill.FilledLMP
 	if pos != nil && pos.NetMW != 0 && pos.AvgPrice != nil {
 		netMW = pos.NetMW + fill.QuantityMW
-		avgPrice = ((*pos.AvgPrice * pos.NetMW) + (fill.FilledLMP * fill.QuantityMW)) / netMW
+		if netMW == 0 {
+			avgPrice = 0 // position flattened; cost basis reset
+		} else {
+			avgPrice = ((*pos.AvgPrice * pos.NetMW) + (fill.FilledLMP * fill.QuantityMW)) / netMW
+		}
 	}
 	if err := l.store.UpsertPosition(fill.Node, netMW, &avgPrice); err != nil {
 		log.Printf("upsert position %s: %v", fill.Node, err)
