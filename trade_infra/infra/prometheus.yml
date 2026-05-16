@@ -21,3 +21,11 @@ scrape_configs:
   - job_name: strategy-engine
     static_configs:
       - targets: ["strategy-engine:9104"]
+
+  - job_name: market-data-svc-south
+    static_configs:
+      - targets: ["market-data-svc-south:9101"]
+
+  - job_name: market-data-svc-west
+    static_configs:
+      - targets: ["market-data-svc-west:9101"]
