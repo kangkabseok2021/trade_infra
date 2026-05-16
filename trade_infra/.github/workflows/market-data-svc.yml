@@ -1,0 +1,25 @@
+name: market-data-svc
+
+on:
+  push:
+    paths: ["market-data-svc/**"]
+  pull_request:
+    paths: ["market-data-svc/**"]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install libpq-dev
+        run: sudo apt-get install -y libpq-dev
+
+      - name: Configure CMake
+        run: cmake -B market-data-svc/build -S market-data-svc
+
+      - name: Build
+        run: cmake --build market-data-svc/build --target market_data_svc test_marketdata -j4
+
+      - name: Run tests
+        run: cd market-data-svc/build && ctest --output-on-failure
