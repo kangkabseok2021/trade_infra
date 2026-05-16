@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/kangkabseok2021/trade_infra/order-svc/internal/order"
+	"github.com/kangkabseok2021/trade_infra/order-svc/metrics"
 )
 
 type Handler struct {
@@ -50,6 +51,7 @@ func (h *Handler) createOrder(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "db error", http.StatusInternalServerError)
 		return
 	}
+	metrics.OrdersCreated.Inc()
 	writeJSON(w, http.StatusCreated, o)
 }
 

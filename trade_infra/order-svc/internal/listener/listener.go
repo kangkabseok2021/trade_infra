@@ -10,6 +10,7 @@ import (
 	"github.com/lib/pq"
 	"github.com/kangkabseok2021/trade_infra/order-svc/internal/evaluator"
 	"github.com/kangkabseok2021/trade_infra/order-svc/internal/order"
+	"github.com/kangkabseok2021/trade_infra/order-svc/metrics"
 )
 
 type TickPayload struct {
@@ -65,6 +66,7 @@ func (l *Listener) evaluate(tick TickPayload) {
 				log.Printf("update order %d: %v", o.ID, err)
 				continue
 			}
+			metrics.OrdersFilled.Inc()
 			l.notify(o.ID, tick.Node, tick.LMP, o.QuantityMW)
 			if l.FillsOut != nil {
 				l.FillsOut <- o.ID
