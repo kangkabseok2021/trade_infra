@@ -1,6 +1,6 @@
 use std::os::raw::c_int;
 
-// Internal non-FFI versions that panic for testing
+// Implementation functions (non-FFI) that can panic
 fn calc_mtm_pnl_impl(
     _net_mw: f64,
     _avg_fill_price: f64,
