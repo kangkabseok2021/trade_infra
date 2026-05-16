@@ -10,6 +10,9 @@ CMakeFiles/
 CMakeCache.txt
 cmake_install.cmake
 .DS_Store
+order-svc/server
+risk-svc/server
+market-data-svc/Testing/
 .env
 .env.local
 .pytest_cache/
