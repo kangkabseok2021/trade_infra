@@ -56,14 +56,21 @@ func (l *Listener) Run() {
 }
 
 func (l *Listener) process(fill FillPayload) {
-	pos, _ := l.store.GetPosition(fill.Node)
+	pos, err := l.store.GetPosition(fill.Node)
+	if err != nil {
+		log.Printf("get position %s: %v", fill.Node, err)
+		return
+	}
 	netMW := fill.QuantityMW
 	avgPrice := fill.FilledLMP
 	if pos != nil && pos.NetMW != 0 && pos.AvgPrice != nil {
 		netMW = pos.NetMW + fill.QuantityMW
 		avgPrice = ((*pos.AvgPrice * pos.NetMW) + (fill.FilledLMP * fill.QuantityMW)) / netMW
 	}
-	l.store.UpsertPosition(fill.Node, netMW, &avgPrice)
+	if err := l.store.UpsertPosition(fill.Node, netMW, &avgPrice); err != nil {
+		log.Printf("upsert position %s: %v", fill.Node, err)
+		return
+	}
 
 	mtmPnl := riskcalc.CalcMtmPnl(netMW, avgPrice, fill.FilledLMP)
 	netExp := riskcalc.CalcNetExposure(netMW, fill.FilledLMP)
