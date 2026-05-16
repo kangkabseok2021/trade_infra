@@ -67,7 +67,7 @@ func (l *Listener) evaluate(tick TickPayload) {
 				continue
 			}
 			metrics.OrdersFilled.Inc()
-			l.notify(o.ID, tick.Node, tick.LMP, o.QuantityMW)
+			l.notify(o.ID, tick.Node, string(o.Side), tick.LMP, o.QuantityMW)
 			if l.FillsOut != nil {
 				l.FillsOut <- o.ID
 			}
@@ -75,10 +75,11 @@ func (l *Listener) evaluate(tick TickPayload) {
 	}
 }
 
-func (l *Listener) notify(orderID int64, node string, filledLMP, qty float64) {
+func (l *Listener) notify(orderID int64, node, side string, filledLMP, qty float64) {
 	nodeJSON, _ := json.Marshal(node)
-	payload := fmt.Sprintf(`{"order_id":%d,"node":%s,"filled_lmp":%f,"quantity_mw":%f}`,
-		orderID, nodeJSON, filledLMP, qty)
+	sideJSON, _ := json.Marshal(side)
+	payload := fmt.Sprintf(`{"order_id":%d,"node":%s,"side":%s,"filled_lmp":%f,"quantity_mw":%f}`,
+		orderID, nodeJSON, sideJSON, filledLMP, qty)
 	if _, err := l.db.Exec("SELECT pg_notify('order_updates', $1)", payload); err != nil {
 		log.Printf("pg_notify order_updates order_id=%d: %v", orderID, err)
 	}

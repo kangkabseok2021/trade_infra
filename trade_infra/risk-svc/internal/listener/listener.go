@@ -17,6 +17,7 @@ const positionLimitMW = 50.0
 type FillPayload struct {
 	OrderID    int64   `json:"order_id"`
 	Node       string  `json:"node"`
+	Side       string  `json:"side"`
 	FilledLMP  float64 `json:"filled_lmp"`
 	QuantityMW float64 `json:"quantity_mw"`
 }
@@ -56,19 +57,25 @@ func (l *Listener) Run() {
 }
 
 func (l *Listener) process(fill FillPayload) {
+	// BUY adds to position; SELL subtracts.
+	signedQty := fill.QuantityMW
+	if fill.Side == "SELL" {
+		signedQty = -fill.QuantityMW
+	}
+
 	pos, err := l.store.GetPosition(fill.Node)
 	if err != nil {
 		log.Printf("get position %s: %v", fill.Node, err)
 		return
 	}
-	netMW := fill.QuantityMW
+	netMW := signedQty
 	avgPrice := fill.FilledLMP
 	if pos != nil && pos.NetMW != 0 && pos.AvgPrice != nil {
-		netMW = pos.NetMW + fill.QuantityMW
+		netMW = pos.NetMW + signedQty
 		if netMW == 0 {
 			avgPrice = 0 // position flattened; cost basis reset
 		} else {
-			avgPrice = ((*pos.AvgPrice * pos.NetMW) + (fill.FilledLMP * fill.QuantityMW)) / netMW
+			avgPrice = ((*pos.AvgPrice * pos.NetMW) + (fill.FilledLMP * signedQty)) / netMW
 		}
 	}
 	if err := l.store.UpsertPosition(fill.Node, netMW, &avgPrice); err != nil {
