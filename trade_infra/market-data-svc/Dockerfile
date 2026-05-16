@@ -1,12 +1,14 @@
 # Stage 1: Build
-FROM ubuntu:22.04 AS builder
+FROM rust:latest AS builder
 RUN apt-get update && apt-get install -y \
     cmake build-essential git libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 WORKDIR /build
 COPY . .
-RUN cmake -B build -S . -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=OFF \
-    && cmake --build build --target market_data_svc marketdata -j"$(nproc)"
+RUN RUSTC_REAL="$(rustup which rustc)" \
+    && cmake -B build -S . -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=OFF \
+        -DRust_COMPILER="${RUSTC_REAL}" \
+    && cmake --build build --target market_data_svc -j"$(nproc)"
 
 # Stage 2: Runtime
 FROM ubuntu:22.04
