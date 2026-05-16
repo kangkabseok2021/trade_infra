@@ -10,3 +10,10 @@ CMakeFiles/
 CMakeCache.txt
 cmake_install.cmake
 .DS_Store
+.env
+.env.local
+.pytest_cache/
+.coverage
+*.exe
+.vscode/
+.idea/
