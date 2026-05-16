@@ -6,8 +6,8 @@ double RiskCalc::mtm_pnl(double net_mw, double avg_fill_price, double current_lm
     return net_mw * (current_lmp - avg_fill_price);
 }
 
-double RiskCalc::net_exposure(double net_mw, double current_lmp) {
-    return std::abs(net_mw) * current_lmp;
+double RiskCalc::net_exposure(double net_mw, double /*current_lmp*/) {
+    return std::abs(net_mw);
 }
 
 bool RiskCalc::limit_breach(double net_exposure_mw, double position_limit_mw) {

@@ -21,13 +21,13 @@ TEST(RiskCalcTest, MtmPnlFlatPosition) {
 }
 
 TEST(RiskCalcTest, NetExposureLong) {
-    // 10 MW long at $45 → $450 exposure
-    EXPECT_DOUBLE_EQ(calc_net_exposure(10.0, 45.0), 450.0);
+    // 10 MW long → 10 MW net exposure (LMP does not affect MW position)
+    EXPECT_DOUBLE_EQ(calc_net_exposure(10.0, 45.0), 10.0);
 }
 
 TEST(RiskCalcTest, NetExposureShort) {
-    // -10 MW short at $45 → $450 exposure (absolute)
-    EXPECT_DOUBLE_EQ(calc_net_exposure(-10.0, 45.0), 450.0);
+    // -10 MW short → 10 MW net exposure (absolute)
+    EXPECT_DOUBLE_EQ(calc_net_exposure(-10.0, 45.0), 10.0);
 }
 
 TEST(RiskCalcTest, LimitBreachExceeded) {
