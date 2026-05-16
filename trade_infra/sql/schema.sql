@@ -72,3 +72,20 @@ INSERT INTO strategy_configs (strategy, node, param_key, param_value) VALUES
     ('ma_crossover',   'HB_NORTH', 'slow_period',  '20'),
     ('ma_crossover',   'HB_NORTH', 'quantity_mw',  '5.0')
 ON CONFLICT DO NOTHING;
+
+-- HB_SOUTH strategy config
+INSERT INTO strategy_configs (strategy, node, param_key, param_value) VALUES
+    ('mean_reversion', 'HB_SOUTH', 'window',       '20'),
+    ('mean_reversion', 'HB_SOUTH', 'threshold',    '1.0'),
+    ('mean_reversion', 'HB_SOUTH', 'quantity_mw',  '5.0'),
+    ('ma_crossover',   'HB_SOUTH', 'fast_period',  '5'),
+    ('ma_crossover',   'HB_SOUTH', 'slow_period',  '20'),
+    ('ma_crossover',   'HB_SOUTH', 'quantity_mw',  '5.0'),
+-- HB_WEST strategy config (higher threshold + smaller qty — lower volatility node)
+    ('mean_reversion', 'HB_WEST',  'window',       '20'),
+    ('mean_reversion', 'HB_WEST',  'threshold',    '1.2'),
+    ('mean_reversion', 'HB_WEST',  'quantity_mw',  '4.0'),
+    ('ma_crossover',   'HB_WEST',  'fast_period',  '5'),
+    ('ma_crossover',   'HB_WEST',  'slow_period',  '20'),
+    ('ma_crossover',   'HB_WEST',  'quantity_mw',  '4.0')
+ON CONFLICT DO NOTHING;
