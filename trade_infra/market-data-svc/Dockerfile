@@ -5,7 +5,7 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 WORKDIR /build
 COPY . .
-RUN cmake -B build -S . -DCMAKE_BUILD_TYPE=Release \
+RUN cmake -B build -S . -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=OFF \
     && cmake --build build --target market_data_svc marketdata -j"$(nproc)"
 
 # Stage 2: Runtime
