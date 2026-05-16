@@ -1,11 +1,6 @@
 use std::os::raw::c_int;
 
-// Implementation functions (non-FFI) that can panic
-fn calc_mtm_pnl_impl(
-    _net_mw: f64,
-    _avg_fill_price: f64,
-    _current_lmp: f64,
-) -> f64 {
+fn calc_mtm_pnl_impl(_net_mw: f64, _avg_fill_price: f64, _current_lmp: f64) -> f64 {
     unimplemented!()
 }
 
@@ -13,20 +8,12 @@ fn calc_net_exposure_impl(_net_mw: f64, _current_lmp: f64) -> f64 {
     unimplemented!()
 }
 
-fn check_limit_breach_impl(
-    _net_exposure_mw: f64,
-    _position_limit_mw: f64,
-) -> c_int {
+fn check_limit_breach_impl(_net_exposure_mw: f64, _position_limit_mw: f64) -> c_int {
     unimplemented!()
 }
 
-// FFI exports that call the implementations
 #[no_mangle]
-pub extern "C" fn calc_mtm_pnl(
-    net_mw: f64,
-    avg_fill_price: f64,
-    current_lmp: f64,
-) -> f64 {
+pub extern "C" fn calc_mtm_pnl(net_mw: f64, avg_fill_price: f64, current_lmp: f64) -> f64 {
     calc_mtm_pnl_impl(net_mw, avg_fill_price, current_lmp)
 }
 
@@ -36,10 +23,7 @@ pub extern "C" fn calc_net_exposure(net_mw: f64, current_lmp: f64) -> f64 {
 }
 
 #[no_mangle]
-pub extern "C" fn check_limit_breach(
-    net_exposure_mw: f64,
-    position_limit_mw: f64,
-) -> c_int {
+pub extern "C" fn check_limit_breach(net_exposure_mw: f64, position_limit_mw: f64) -> c_int {
     check_limit_breach_impl(net_exposure_mw, position_limit_mw)
 }
 
