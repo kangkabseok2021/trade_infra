@@ -1,0 +1,24 @@
+groups:
+  - name: trade_infra_slos
+    rules:
+      - record: slo:order_eval_latency_p99:5m
+        expr: histogram_quantile(0.99, rate(order_svc_eval_latency_seconds_bucket[5m]))
+
+      - record: slo:service_availability:5m
+        expr: avg_over_time(up[5m])
+
+      - alert: OrderEvalLatencyHigh
+        expr: slo:order_eval_latency_p99:5m > 0.05
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "order-svc p99 eval latency {{ $value | humanizeDuration }} > 50ms"
+
+      - alert: ServiceDown
+        expr: up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "{{ $labels.job }} is down"

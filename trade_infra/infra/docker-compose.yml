@@ -1,0 +1,78 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: trade_infra
+    ports: ["5432:5432"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      retries: 10
+    volumes:
+      - ../sql/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+
+  market-data-svc:
+    build:
+      context: ../market-data-svc
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/trade_infra
+      NODE_NAME: HB_NORTH
+      BASE_LMP: "45.0"
+      VOLATILITY: "5.0"
+      INTERVAL_MS: "1000"
+      METRICS_PORT: "9101"
+    ports: ["9101:9101"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  order-svc:
+    build:
+      context: ../order-svc
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/trade_infra
+      API_ADDR: ":8080"
+      METRICS_ADDR: ":9102"
+    ports: ["8080:8080", "9102:9102"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  risk-svc:
+    build:
+      context: ../risk-svc
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/trade_infra
+      API_ADDR: ":8081"
+      METRICS_ADDR: ":9103"
+    ports: ["8081:8081", "9103:9103"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  prometheus:
+    image: prom/prometheus:v2.51.0
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./slo_rules.yml:/etc/prometheus/slo_rules.yml
+    ports: ["9090:9090"]
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --web.enable-lifecycle
+
+  grafana:
+    image: grafana/grafana:10.4.0
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+    volumes:
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+    ports: ["3000:3000"]
+    depends_on: [prometheus]
