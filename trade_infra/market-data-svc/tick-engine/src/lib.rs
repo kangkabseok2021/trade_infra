@@ -61,6 +61,9 @@ pub extern "C" fn tick_generator_next(
     out_lmp: *mut f64,
     out_load_mw: *mut f64,
 ) {
+    if gen.is_null() || out_lmp.is_null() || out_load_mw.is_null() {
+        return;
+    }
     unsafe { (*gen).next(&mut *out_lmp, &mut *out_load_mw); }
 }
 
