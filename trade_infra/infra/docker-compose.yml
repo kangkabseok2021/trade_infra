@@ -29,6 +29,36 @@ services:
       postgres:
         condition: service_healthy
 
+  market-data-svc-south:
+    build:
+      context: ../market-data-svc
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/trade_infra?sslmode=disable
+      NODE_NAME: HB_SOUTH
+      BASE_LMP: "42.0"
+      VOLATILITY: "7.0"
+      INTERVAL_MS: "1000"
+      METRICS_PORT: "9101"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  market-data-svc-west:
+    build:
+      context: ../market-data-svc
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/trade_infra?sslmode=disable
+      NODE_NAME: HB_WEST
+      BASE_LMP: "38.0"
+      VOLATILITY: "6.0"
+      INTERVAL_MS: "1000"
+      METRICS_PORT: "9101"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
   order-svc:
     build:
       context: ../order-svc
@@ -50,6 +80,7 @@ services:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/trade_infra?sslmode=disable
       API_ADDR: ":8081"
       METRICS_ADDR: ":9103"
+      RISK_POSITION_LIMIT_MW: "50"
     ports: ["8081:8081", "9103:9103"]
     depends_on:
       postgres:
@@ -72,6 +103,54 @@ services:
       context: ../python
       dockerfile: Dockerfile.strategy
     command: uv run python strategies/ma_crossover.py --node HB_NORTH
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/trade_infra?sslmode=disable
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  mean-reversion-south:
+    build:
+      context: ../python
+      dockerfile: Dockerfile.strategy
+    command: uv run python strategies/mean_reversion.py --node HB_SOUTH
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/trade_infra?sslmode=disable
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  mean-reversion-west:
+    build:
+      context: ../python
+      dockerfile: Dockerfile.strategy
+    command: uv run python strategies/mean_reversion.py --node HB_WEST
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/trade_infra?sslmode=disable
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  ma-crossover-south:
+    build:
+      context: ../python
+      dockerfile: Dockerfile.strategy
+    command: uv run python strategies/ma_crossover.py --node HB_SOUTH
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/trade_infra?sslmode=disable
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  ma-crossover-west:
+    build:
+      context: ../python
+      dockerfile: Dockerfile.strategy
+    command: uv run python strategies/ma_crossover.py --node HB_WEST
     environment:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/trade_infra?sslmode=disable
     depends_on:
