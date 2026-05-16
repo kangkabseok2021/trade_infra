@@ -5,9 +5,10 @@ import psycopg2
 import requests
 
 
-ORDER_SVC = "http://localhost:8080"
-RISK_SVC  = "http://localhost:8081"
-DB_URL    = "postgresql://postgres:postgres@localhost:5432/trade_infra"
+ORDER_SVC       = "http://localhost:8080"
+RISK_SVC        = "http://localhost:8081"
+STRATEGY_ENGINE = "http://localhost:9104"
+DB_URL          = "postgresql://postgres:postgres@localhost:5432/trade_infra"
 
 
 def wait_for(url: str, timeout: int = 60) -> None:
@@ -26,6 +27,8 @@ def main() -> int:
     print("Waiting for services to be healthy...")
     wait_for(f"{ORDER_SVC}/health")
     wait_for(f"{RISK_SVC}/health")
+    wait_for(f"{STRATEGY_ENGINE}/health")
+    print("strategy-engine healthy.")
     print("All services healthy.")
 
     # Wait for price ticks to accumulate
@@ -75,6 +78,25 @@ def main() -> int:
     snap_count = cur.fetchone()[0]
     assert snap_count > 0, "No risk snapshot created after fill"
     print(f"Risk snapshots for HB_NORTH: {snap_count}")
+
+    print("\n=== Waiting for a strategy signal ===")
+    deadline = time.time() + 120  # strategies need warm-up time (20-tick window)
+    signal_submitted = False
+    while time.time() < deadline:
+        cur.execute(
+            "SELECT id, strategy, side, status, order_id FROM signals "
+            "WHERE status='SUBMITTED' AND order_id IS NOT NULL LIMIT 1"
+        )
+        row = cur.fetchone()
+        if row:
+            sig_id, strategy, side, status, order_id = row
+            print(f"Strategy signal: id={sig_id} strategy={strategy} side={side} order_id={order_id}")
+            signal_submitted = True
+            break
+        time.sleep(3)
+
+    assert signal_submitted, "No submitted signal with order_id within 120s — check mean_reversion and strategy-engine logs"
+    print("✓ Strategy signal submitted and order placed")
 
     conn.close()
     print("\n✓ Smoke test PASSED")
