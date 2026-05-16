@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"encoding/json"
 	"log"
+	"os"
+	"strconv"
 	"time"
 
 	"github.com/lib/pq"
@@ -12,7 +14,14 @@ import (
 	"github.com/kangkabseok2021/trade_infra/risk-svc/metrics"
 )
 
-const positionLimitMW = 50.0
+var positionLimitMW = func() float64 {
+	if v := os.Getenv("RISK_POSITION_LIMIT_MW"); v != "" {
+		if f, err := strconv.ParseFloat(v, 64); err == nil {
+			return f
+		}
+	}
+	return 50.0
+}()
 
 type FillPayload struct {
 	OrderID    int64   `json:"order_id"`
