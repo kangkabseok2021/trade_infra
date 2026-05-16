@@ -35,6 +35,7 @@ if(BUILD_TESTS)
 
     enable_testing()
     add_executable(test_marketdata tests/test_tick_generator.cpp)
+    target_include_directories(test_marketdata PRIVATE include)
     target_link_libraries(test_marketdata marketdata GTest::gtest_main)
     include(GoogleTest)
     gtest_discover_tests(test_marketdata)
