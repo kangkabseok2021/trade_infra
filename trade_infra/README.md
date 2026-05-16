@@ -145,10 +145,13 @@ docker compose up --build
 
 | Service | URL |
 |---|---|
-| order-svc REST | http://localhost:8080 |
+| order-svc REST | http://localhost:18080 |
 | risk-svc REST | http://localhost:8081 |
-| Prometheus | http://localhost:9090 |
-| Grafana | http://localhost:3000 (admin / admin) |
+| Prometheus | http://localhost:19090 |
+| Grafana | http://localhost:13000 (admin / admin) |
+| PostgreSQL | localhost:5433 |
+
+> Ports 18080 / 19090 / 13000 / 5433 are remapped to avoid conflicts with common local services (Grafana, Prometheus, PostgreSQL, port 8080).
 
 Tear down (removes volumes):
 

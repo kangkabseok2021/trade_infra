@@ -1,0 +1,7 @@
+apiVersion: 1
+providers:
+  - name: trade_infra
+    folder: Trading
+    type: file
+    options:
+      path: /var/lib/grafana/dashboards
