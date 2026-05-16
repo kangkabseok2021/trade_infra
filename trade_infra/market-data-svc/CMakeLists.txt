@@ -25,13 +25,11 @@ if(APPLE)
     target_link_options(marketdata PRIVATE -undefined dynamic_lookup)
 endif()
 
-# Main service binary (only when all sources are present)
-if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp")
-    add_executable(market_data_svc
-        src/main.cpp src/db_writer.cpp src/metrics_server.cpp)
-    target_include_directories(market_data_svc PRIVATE include src)
-    target_link_libraries(market_data_svc marketdata httplib::httplib PostgreSQL::PostgreSQL)
-endif()
+# Main service binary
+add_executable(market_data_svc
+    src/main.cpp src/db_writer.cpp src/metrics_server.cpp)
+target_include_directories(market_data_svc PRIVATE include src)
+target_link_libraries(market_data_svc marketdata httplib::httplib PostgreSQL::PostgreSQL)
 
 # Tests
 enable_testing()
