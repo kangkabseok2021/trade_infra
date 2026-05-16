@@ -5,6 +5,13 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 include(FetchContent)
 
+# Corrosion: build Rust tick-engine cdylib as CMake target "marketdata"
+FetchContent_Declare(corrosion
+    GIT_REPOSITORY https://github.com/corrosion-rs/corrosion.git
+    GIT_TAG        v0.5.0)
+FetchContent_MakeAvailable(corrosion)
+corrosion_import_crate(MANIFEST_PATH tick-engine/Cargo.toml)
+
 FetchContent_Declare(httplib
     GIT_REPOSITORY https://github.com/yhirose/cpp-httplib.git
     GIT_TAG        v0.15.3)
@@ -12,14 +19,7 @@ FetchContent_MakeAvailable(httplib)
 
 find_package(PostgreSQL REQUIRED)
 
-# Shared library — extern "C" ABI, Rust-swappable
-add_library(marketdata SHARED src/tick_generator.cpp)
-target_include_directories(marketdata PUBLIC include PRIVATE src)
-if(APPLE)
-    target_link_options(marketdata PRIVATE -undefined dynamic_lookup)
-endif()
-
-# Main service binary
+# Main service binary — unchanged
 add_executable(market_data_svc
     src/main.cpp src/db_writer.cpp src/metrics_server.cpp)
 target_include_directories(market_data_svc PRIVATE include src)
