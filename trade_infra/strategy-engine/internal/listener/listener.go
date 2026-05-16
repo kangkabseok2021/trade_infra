@@ -60,7 +60,15 @@ func (l *Listener) process(signalID int64) {
 
 	allowed, reason := l.gate.Check(sig.Strategy, sig.Node, sig.QuantityMW)
 	if !allowed {
-		l.store.ClaimPending(signalID, signal.StatusSkipped, &reason)
+		claimed, err := l.store.ClaimPending(signalID, signal.StatusSkipped, &reason)
+		if err != nil {
+			log.Printf("signal %d skip-claim error: %v", signalID, err)
+			return
+		}
+		if !claimed {
+			log.Printf("signal %d already claimed, skip discarded", signalID)
+			return
+		}
 		metrics.SignalsSkipped.WithLabelValues(sig.Strategy, sig.Node, reason).Inc()
 		log.Printf("signal %d skipped: %s", signalID, reason)
 		return
@@ -78,7 +86,9 @@ func (l *Listener) process(signalID int64) {
 		metrics.SignalsSkipped.WithLabelValues(sig.Strategy, sig.Node, "order_error").Inc()
 		return
 	}
-	l.store.SetOrderID(signalID, orderID)
+	if err := l.store.SetOrderID(signalID, orderID); err != nil {
+		log.Printf("signal %d: order %d submitted but failed to record order_id: %v", signalID, orderID, err)
+	}
 	metrics.SignalsSubmitted.WithLabelValues(sig.Strategy, sig.Node).Inc()
 	log.Printf("signal %d submitted as order %d (%s %s %.1fMW @ %.4f)",
 		signalID, orderID, sig.Strategy, sig.Side, sig.QuantityMW, sig.LimitPrice)
