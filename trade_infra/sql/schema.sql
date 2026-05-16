@@ -39,3 +39,36 @@ CREATE TABLE IF NOT EXISTS risk_snapshots (
     snapshot_at     TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS idx_risk_snapshots_node_ts ON risk_snapshots (node, snapshot_at DESC);
+
+CREATE TABLE IF NOT EXISTS signals (
+    id           BIGSERIAL PRIMARY KEY,
+    strategy     TEXT NOT NULL,
+    node         TEXT NOT NULL,
+    side         TEXT NOT NULL CHECK (side IN ('BUY','SELL')),
+    quantity_mw  NUMERIC(10,2) NOT NULL,
+    limit_price  NUMERIC(10,4) NOT NULL,
+    status       TEXT NOT NULL DEFAULT 'PENDING'
+                     CHECK (status IN ('PENDING','SUBMITTED','SKIPPED')),
+    reason       TEXT,
+    order_id     BIGINT,
+    created_at   TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_signals_strategy_node_ts
+    ON signals (strategy, node, created_at DESC);
+
+CREATE TABLE IF NOT EXISTS strategy_configs (
+    strategy    TEXT NOT NULL,
+    node        TEXT NOT NULL,
+    param_key   TEXT NOT NULL,
+    param_value TEXT NOT NULL,
+    PRIMARY KEY (strategy, node, param_key)
+);
+
+INSERT INTO strategy_configs (strategy, node, param_key, param_value) VALUES
+    ('mean_reversion', 'HB_NORTH', 'window',       '20'),
+    ('mean_reversion', 'HB_NORTH', 'threshold',    '1.0'),
+    ('mean_reversion', 'HB_NORTH', 'quantity_mw',  '5.0'),
+    ('ma_crossover',   'HB_NORTH', 'fast_period',  '5'),
+    ('ma_crossover',   'HB_NORTH', 'slow_period',  '20'),
+    ('ma_crossover',   'HB_NORTH', 'quantity_mw',  '5.0')
+ON CONFLICT DO NOTHING;
