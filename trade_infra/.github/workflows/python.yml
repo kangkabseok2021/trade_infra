@@ -1,0 +1,20 @@
+name: python
+
+on:
+  push:
+    paths: ["python/**"]
+  pull_request:
+    paths: ["python/**"]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+      - name: Sync dependencies
+        run: cd python && uv sync --extra dev
+      - name: Lint
+        run: cd python && uv run ruff check .
+      - name: Test
+        run: cd python && uv run pytest tests/ -v
