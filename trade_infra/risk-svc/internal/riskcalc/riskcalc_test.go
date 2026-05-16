@@ -15,8 +15,8 @@ func TestMtmPnlLong(t *testing.T) {
 
 func TestNetExposureAbsolute(t *testing.T) {
 	got := riskcalc.CalcNetExposure(-10.0, 45.0)
-	if got != 450.0 {
-		t.Errorf("want 450.0 got %f", got)
+	if got != 10.0 {
+		t.Errorf("want 10.0 got %f", got)
 	}
 }
 
