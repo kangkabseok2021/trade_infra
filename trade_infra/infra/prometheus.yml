@@ -17,3 +17,7 @@ scrape_configs:
   - job_name: risk-svc
     static_configs:
       - targets: ["risk-svc:9103"]
+
+  - job_name: strategy-engine
+    static_configs:
+      - targets: ["strategy-engine:9104"]

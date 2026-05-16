@@ -55,6 +55,48 @@ services:
       postgres:
         condition: service_healthy
 
+  mean-reversion:
+    build:
+      context: ../python
+      dockerfile: Dockerfile.strategy
+    command: uv run python strategies/mean_reversion.py --node HB_NORTH
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/trade_infra?sslmode=disable
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  ma-crossover:
+    build:
+      context: ../python
+      dockerfile: Dockerfile.strategy
+    command: uv run python strategies/ma_crossover.py --node HB_NORTH
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/trade_infra?sslmode=disable
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  strategy-engine:
+    build:
+      context: ../strategy-engine
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/trade_infra?sslmode=disable
+      ORDER_SVC_URL: http://order-svc:8080
+      POSITION_LIMIT_MW: "40"
+      COOLDOWN_SECS: "30"
+      METRICS_ADDR: ":9104"
+    ports: ["9104:9104"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      order-svc:
+        condition: service_started
+    restart: unless-stopped
+
   prometheus:
     image: prom/prometheus:v2.51.0
     volumes:
