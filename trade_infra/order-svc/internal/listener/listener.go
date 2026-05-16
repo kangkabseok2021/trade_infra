@@ -54,6 +54,9 @@ func (l *Listener) Run() {
 }
 
 func (l *Listener) evaluate(tick TickPayload) {
+	start := time.Now()
+	defer func() { metrics.EvalLatency.Observe(time.Since(start).Seconds()) }()
+
 	orders, err := l.store.ListPendingByNode(tick.Node)
 	if err != nil {
 		log.Printf("list pending: %v", err)
