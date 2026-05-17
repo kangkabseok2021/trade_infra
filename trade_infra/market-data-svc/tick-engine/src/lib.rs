@@ -62,7 +62,9 @@ fn fetch_ercot_lmps(settlement_point: &str, date: &str) -> Option<Vec<f64>> {
          ?deliveryDateFrom={date}&deliveryDateTo={date}\
          &settlementPoint={settlement_point}&size=96"
     );
+    let api_key = std::env::var("ERCOT_API_KEY").unwrap_or_default();
     let body = ureq::get(&url)
+        .set("Ocp-Apim-Subscription-Key", &api_key)
         .timeout(std::time::Duration::from_secs(5))
         .call()
         .ok()?

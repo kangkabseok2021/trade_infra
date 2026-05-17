@@ -25,6 +25,7 @@ services:
       INTERVAL_MS: "1000"
       METRICS_PORT: "9101"
       ERCOT_REPLAY_DATE: "2024-01-15"
+      ERCOT_API_KEY: ""
     ports: ["9101:9101"]
     depends_on:
       postgres:
@@ -42,6 +43,7 @@ services:
       INTERVAL_MS: "1000"
       METRICS_PORT: "9101"
       ERCOT_REPLAY_DATE: "2024-01-15"
+      ERCOT_API_KEY: ""
     depends_on:
       postgres:
         condition: service_healthy
@@ -58,6 +60,7 @@ services:
       INTERVAL_MS: "1000"
       METRICS_PORT: "9101"
       ERCOT_REPLAY_DATE: "2024-01-15"
+      ERCOT_API_KEY: ""
     depends_on:
       postgres:
         condition: service_healthy
