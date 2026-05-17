@@ -35,9 +35,10 @@ func TestStore_Create(t *testing.T) {
 
 func TestStore_GetByID(t *testing.T) {
 	s := order.NewStore(testDB(t))
-	created, _ := s.Create(order.CreateOrderRequest{
+	created, err := s.Create(order.CreateOrderRequest{
 		Node: "HB_SOUTH", Side: order.SideSell, QuantityMW: 5, LimitPrice: 40,
 	})
+	if err != nil { t.Fatalf("create: %v", err) }
 	got, err := s.GetByID(created.ID)
 	if err != nil { t.Fatalf("get: %v", err) }
 	if got.Node != "HB_SOUTH" { t.Errorf("want HB_SOUTH got %s", got.Node) }
@@ -55,9 +56,10 @@ func TestStore_ListPendingByNode(t *testing.T) {
 
 func TestStore_UpdateStatus(t *testing.T) {
 	s := order.NewStore(testDB(t))
-	o, _ := s.Create(order.CreateOrderRequest{
+	o, err := s.Create(order.CreateOrderRequest{
 		Node: "HB_NORTH", Side: order.SideBuy, QuantityMW: 10, LimitPrice: 50,
 	})
+	if err != nil { t.Fatalf("create: %v", err) }
 	fa := 48.5
 	if err := s.UpdateStatus(o.ID, order.StatusFilled, &fa); err != nil {
 		t.Fatalf("update: %v", err)
