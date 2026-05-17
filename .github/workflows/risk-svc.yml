@@ -49,8 +49,8 @@ jobs:
 
       - name: Build libriskcalc
         run: |
-          cmake -B risk-svc/build -S risk-svc -DRust_COMPILER="$(rustup which rustc)"
-          cmake --build risk-svc/build --target riskcalc -j4
+          cmake -B risk-svc/build -S risk-svc -DRust_COMPILER="$(rustup which rustc)" -DBUILD_TESTS=OFF
+          cmake --build risk-svc/build -j4
 
       - name: Apply schema
         run: psql postgresql://postgres:postgres@localhost:5432/trade_infra_test -f sql/schema.sql
