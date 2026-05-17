@@ -14,6 +14,7 @@ jobs:
         working-directory: trade_infra
     steps:
       - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
       - uses: astral-sh/setup-uv@v3
       - uses: actions/setup-go@v5
         with:
@@ -24,10 +25,12 @@ jobs:
 
       - name: Build C++ libraries
         run: |
-          cmake -B market-data-svc/build -S market-data-svc
-          cmake --build market-data-svc/build --target marketdata market_data_svc -j4
-          cmake -B risk-svc/build -S risk-svc
-          cmake --build risk-svc/build --target riskcalc -j4
+          cmake -B market-data-svc/build -S market-data-svc \
+            -DRust_COMPILER="$(rustup which rustc)" -DBUILD_TESTS=OFF
+          cmake --build market-data-svc/build -j4
+          cmake -B risk-svc/build -S risk-svc \
+            -DRust_COMPILER="$(rustup which rustc)" -DBUILD_TESTS=OFF
+          cmake --build risk-svc/build -j4
 
       - name: Build Go services
         run: |
