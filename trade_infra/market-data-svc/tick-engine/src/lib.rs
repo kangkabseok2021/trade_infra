@@ -41,8 +41,13 @@ impl TickGenerator {
     }
 }
 
-fn parse_ercot_json(_body: &str) -> Option<Vec<f64>> {
-    None  // stub — implemented in Task 3
+fn parse_ercot_json(body: &str) -> Option<Vec<f64>> {
+    let v: serde_json::Value = serde_json::from_str(body).ok()?;
+    let rows = v.get("data")?.as_array()?;
+    let prices: Vec<f64> = rows.iter()
+        .filter_map(|row| row.get(4)?.as_f64())
+        .collect();
+    if prices.is_empty() { None } else { Some(prices) }
 }
 
 // --- extern "C" ABI — same symbols as the former C++ libmarketdata.so ---
