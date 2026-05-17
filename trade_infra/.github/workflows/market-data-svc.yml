@@ -11,15 +11,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - name: Install libpq-dev
         run: sudo apt-get install -y libpq-dev
-
       - name: Configure CMake
         run: cmake -B market-data-svc/build -S market-data-svc
-
       - name: Build
         run: cmake --build market-data-svc/build --target market_data_svc test_marketdata -j4
-
       - name: Run tests
         run: cd market-data-svc/build && ctest --output-on-failure
+
+  rust-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Install OpenSSL dev headers
+        run: sudo apt-get install -y pkg-config libssl-dev
+      - name: Run tick-engine unit tests
+        run: cargo test --manifest-path market-data-svc/tick-engine/Cargo.toml
