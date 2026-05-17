@@ -203,6 +203,42 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
+  momentum:
+    build:
+      context: ../python
+      dockerfile: Dockerfile.strategy
+    command: uv run python strategies/momentum.py --node HB_NORTH
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/trade_infra?sslmode=disable
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  momentum-south:
+    build:
+      context: ../python
+      dockerfile: Dockerfile.strategy
+    command: uv run python strategies/momentum.py --node HB_SOUTH
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/trade_infra?sslmode=disable
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  momentum-west:
+    build:
+      context: ../python
+      dockerfile: Dockerfile.strategy
+    command: uv run python strategies/momentum.py --node HB_WEST
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/trade_infra?sslmode=disable
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
   strategy-engine:
     build:
       context: ../strategy-engine
