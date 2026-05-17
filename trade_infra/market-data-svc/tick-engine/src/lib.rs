@@ -9,21 +9,25 @@ const LMP_MAX: f64   = 499.0;
 const LOAD_MIN: f64  = 5_001.0;
 
 pub struct TickGenerator {
-    base_lmp:   f64,
+    lmps:      Vec<f64>,
+    idx:       usize,
+    base_lmp:  f64,
     volatility: f64,
-    lmp:        f64,
-    rng:        rand::rngs::SmallRng,
-    dist:       Normal<f64>,
+    lmp:       f64,
+    rng:       rand::rngs::SmallRng,
+    dist:      Normal<f64>,
 }
 
 impl TickGenerator {
     pub fn new(base_lmp: f64, volatility: f64, seed: u32) -> Self {
         Self {
+            lmps:      vec![],
+            idx:       0,
             base_lmp,
             volatility,
-            lmp: base_lmp,
-            rng: rand::rngs::SmallRng::seed_from_u64(seed as u64),
-            dist: Normal::new(0.0, 1.0).unwrap(),
+            lmp:       base_lmp,
+            rng:       rand::rngs::SmallRng::seed_from_u64(seed as u64),
+            dist:      Normal::new(0.0, 1.0).unwrap(),
         }
     }
 
@@ -35,6 +39,10 @@ impl TickGenerator {
         let load = BASE_LOAD + LOAD_VOL * self.dist.sample(&mut self.rng);
         *out_load_mw = load.max(LOAD_MIN);
     }
+}
+
+fn parse_ercot_json(_body: &str) -> Option<Vec<f64>> {
+    None  // stub — implemented in Task 3
 }
 
 // --- extern "C" ABI — same symbols as the former C++ libmarketdata.so ---
@@ -71,6 +79,8 @@ pub extern "C" fn tick_generator_next(
 mod tests {
     use super::*;
 
+    // --- existing tests (must keep passing) ---
+
     #[test]
     fn lmp_stays_in_range() {
         let mut g = TickGenerator::new(45.0, 5.0, 42);
@@ -91,6 +101,59 @@ mod tests {
             g1.next(&mut l1, &mut d1);
             g2.next(&mut l2, &mut d2);
             assert_eq!(l1, l2, "lmp diverged at tick {i}");
+        }
+    }
+
+    // --- new tests (failing until Tasks 3 and 4) ---
+
+    #[test]
+    fn parse_lmps_extracts_prices() {
+        let json = r#"{"data":[["2024-01-15",1,1,"HB_NORTH",23.45],["2024-01-15",1,2,"HB_NORTH",24.10],["2024-01-15",1,3,"HB_NORTH",22.80]]}"#;
+        let result = parse_ercot_json(json);
+        assert_eq!(result, Some(vec![23.45, 24.10, 22.80]));
+    }
+
+    #[test]
+    fn parse_lmps_returns_none_on_bad_json() {
+        assert_eq!(parse_ercot_json("not json"), None);
+    }
+
+    #[test]
+    fn replay_cycles_buffer() {
+        // Construct directly with a known lmps buffer
+        let mut g = TickGenerator {
+            lmps:      vec![10.0, 20.0, 30.0],
+            idx:       0,
+            base_lmp:  45.0,
+            volatility: 5.0,
+            lmp:       45.0,
+            rng:       rand::rngs::SmallRng::seed_from_u64(42),
+            dist:      Normal::new(0.0, 1.0).unwrap(),
+        };
+        let (mut lmp, mut load) = (0.0f64, 0.0f64);
+        g.next(&mut lmp, &mut load); assert_eq!(lmp, 10.0);
+        g.next(&mut lmp, &mut load); assert_eq!(lmp, 20.0);
+        g.next(&mut lmp, &mut load); assert_eq!(lmp, 30.0);
+        g.next(&mut lmp, &mut load); assert_eq!(lmp, 10.0, "should wrap around");
+    }
+
+    #[test]
+    fn replay_uses_ou_when_empty() {
+        // Empty lmps → falls back to OU → LMP stays in [1, 499]
+        let mut g = TickGenerator {
+            lmps:      vec![],
+            idx:       0,
+            base_lmp:  45.0,
+            volatility: 5.0,
+            lmp:       45.0,
+            rng:       rand::rngs::SmallRng::seed_from_u64(42),
+            dist:      Normal::new(0.0, 1.0).unwrap(),
+        };
+        for _ in 0..100 {
+            let (mut lmp, mut load) = (0.0f64, 0.0f64);
+            g.next(&mut lmp, &mut load);
+            assert!(lmp >= 1.0 && lmp <= 499.0, "lmp={lmp} out of [1,499]");
+            assert!(load > 5000.0, "load={load} not > 5000");
         }
     }
 }
