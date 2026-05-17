@@ -60,3 +60,23 @@ def emit_signal(
     cur.execute("SELECT pg_notify('signals', %s)", (str(signal_id),))
     conn.close()
     return signal_id
+
+
+def listen_ticks_multi(db_url: str, nodes: set[str]):
+    """Yield tick dicts {node, lmp} for any node in the given set via LISTEN price_ticks."""
+    conn = psycopg2.connect(db_url)
+    conn.set_isolation_level(psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT)
+    cur = conn.cursor()
+    cur.execute("LISTEN price_ticks")
+    while True:
+        if select.select([conn], [], [], 5.0) == ([], [], []):
+            continue
+        conn.poll()
+        while conn.notifies:
+            notify = conn.notifies.pop(0)
+            try:
+                payload = json.loads(notify.payload)
+            except json.JSONDecodeError:
+                continue
+            if payload.get("node") in nodes:
+                yield payload
