@@ -49,6 +49,7 @@ impl TickGenerator {
 fn parse_ercot_json(body: &str) -> Option<Vec<f64>> {
     let v: serde_json::Value = serde_json::from_str(body).ok()?;
     let rows = v.get("data")?.as_array()?;
+    // ERCOT DAM SPP row layout: [deliveryDate, hour, interval, settlementPointName, price]
     let prices: Vec<f64> = rows.iter()
         .filter_map(|row| row.get(4)?.as_f64())
         .collect();
@@ -62,6 +63,7 @@ fn fetch_ercot_lmps(settlement_point: &str, date: &str) -> Option<Vec<f64>> {
          &settlementPoint={settlement_point}&size=96"
     );
     let body = ureq::get(&url)
+        .timeout(std::time::Duration::from_secs(5))
         .call()
         .ok()?
         .into_string()
