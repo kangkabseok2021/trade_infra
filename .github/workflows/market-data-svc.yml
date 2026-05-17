@@ -14,10 +14,11 @@ jobs:
         working-directory: trade_infra
     steps:
       - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
       - name: Install libpq-dev
         run: sudo apt-get install -y libpq-dev
       - name: Configure CMake
-        run: cmake -B market-data-svc/build -S market-data-svc
+        run: cmake -B market-data-svc/build -S market-data-svc -DRust_COMPILER="$(rustup which rustc)"
       - name: Build
         run: cmake --build market-data-svc/build --target market_data_svc test_marketdata -j4
       - name: Run tests

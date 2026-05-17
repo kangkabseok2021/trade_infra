@@ -14,9 +14,10 @@ jobs:
         working-directory: trade_infra
     steps:
       - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
       - name: Configure and build
         run: |
-          cmake -B risk-svc/build -S risk-svc
+          cmake -B risk-svc/build -S risk-svc -DRust_COMPILER="$(rustup which rustc)"
           cmake --build risk-svc/build --target test_riskcalc -j4
       - name: Run C++ tests
         run: cd risk-svc/build && ctest --output-on-failure
@@ -41,13 +42,14 @@ jobs:
         ports: ["5432:5432"]
     steps:
       - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
       - uses: actions/setup-go@v5
         with:
           go-version: "1.26"
 
       - name: Build libriskcalc
         run: |
-          cmake -B risk-svc/build -S risk-svc
+          cmake -B risk-svc/build -S risk-svc -DRust_COMPILER="$(rustup which rustc)"
           cmake --build risk-svc/build --target riskcalc -j4
 
       - name: Apply schema
