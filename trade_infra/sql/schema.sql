@@ -102,3 +102,16 @@ INSERT INTO strategy_configs (strategy, node, param_key, param_value) VALUES
     ('spread_arb', 'HB_WEST',  'threshold',    '1.5'),
     ('spread_arb', 'HB_WEST',  'quantity_mw',  '4.0')
 ON CONFLICT DO NOTHING;
+
+-- Momentum strategy config (Rate-of-Change, all 3 nodes)
+INSERT INTO strategy_configs (strategy, node, param_key, param_value) VALUES
+    ('momentum', 'HB_NORTH', 'window',        '20'),
+    ('momentum', 'HB_NORTH', 'threshold_pct', '2.0'),
+    ('momentum', 'HB_NORTH', 'quantity_mw',   '5.0'),
+    ('momentum', 'HB_SOUTH', 'window',        '20'),
+    ('momentum', 'HB_SOUTH', 'threshold_pct', '2.0'),
+    ('momentum', 'HB_SOUTH', 'quantity_mw',   '5.0'),
+    ('momentum', 'HB_WEST',  'window',        '20'),
+    ('momentum', 'HB_WEST',  'threshold_pct', '2.0'),
+    ('momentum', 'HB_WEST',  'quantity_mw',   '4.0')
+ON CONFLICT DO NOTHING;
