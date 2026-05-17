@@ -11,8 +11,8 @@ RUN RUSTC_REAL="$(rustup which rustc)" \
     && cmake --build build --target market_data_svc -j"$(nproc)"
 
 # Stage 2: Runtime
-FROM ubuntu:22.04
-RUN apt-get update && apt-get install -y libpq5 \
+FROM debian:trixie-slim
+RUN apt-get update && apt-get install -y libpq5 libbrotli1 \
     && rm -rf /var/lib/apt/lists/*
 COPY --from=builder /build/build/market_data_svc /usr/local/bin/
 COPY --from=builder /build/build/libmarketdata.so /usr/local/lib/
