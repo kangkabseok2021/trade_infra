@@ -1,14 +1,16 @@
 """Integration smoke test: runs against a live docker-compose stack."""
+import os
 import sys
 import time
 import psycopg2
 import requests
 
 
-ORDER_SVC       = "http://localhost:8080"
-RISK_SVC        = "http://localhost:8081"
-STRATEGY_ENGINE = "http://localhost:9104"
-DB_URL          = "postgresql://postgres:postgres@localhost:5432/trade_infra"
+# Ports match docker-compose.yml published ports (host-side)
+ORDER_SVC       = os.getenv("ORDER_SVC_URL",       "http://localhost:18080")
+RISK_SVC        = os.getenv("RISK_SVC_URL",        "http://localhost:8081")
+STRATEGY_ENGINE = os.getenv("STRATEGY_ENGINE_URL", "http://localhost:9104")
+DB_URL          = os.getenv("DB_URL",              "postgresql://postgres:postgres@localhost:5433/trade_infra")
 
 
 def wait_for(url: str, timeout: int = 60) -> None:

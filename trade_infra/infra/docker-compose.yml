@@ -165,7 +165,7 @@ services:
     build:
       context: ../python
       dockerfile: Dockerfile.strategy
-    command: uv run python -u strategies/spread_arb.py --node-a HB_NORTH --node-b HB_SOUTH
+    command: uv run python strategies/spread_arb.py --node-a HB_NORTH --node-b HB_SOUTH
     environment:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/trade_infra?sslmode=disable
       PYTHONUNBUFFERED: "1"
