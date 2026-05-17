@@ -6,4 +6,3 @@ edition = "2021"
 [lib]
 name = "riskcalc"
 crate-type = ["cdylib"]
-
