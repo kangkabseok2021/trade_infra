@@ -19,6 +19,9 @@ func testDB(t *testing.T) *sql.DB {
 	if err != nil {
 		t.Fatalf("open: %v", err)
 	}
+	if _, err := db.Exec("DELETE FROM orders"); err != nil {
+		t.Fatalf("pre-test cleanup: %v", err)
+	}
 	t.Cleanup(func() { db.Exec("DELETE FROM orders"); db.Close() })
 	return db
 }
@@ -46,9 +49,9 @@ func TestStore_GetByID(t *testing.T) {
 
 func TestStore_ListPendingByNode(t *testing.T) {
 	s := order.NewStore(testDB(t))
-	s.Create(order.CreateOrderRequest{Node: "HB_NORTH", Side: order.SideBuy, QuantityMW: 10, LimitPrice: 50})
-	s.Create(order.CreateOrderRequest{Node: "HB_NORTH", Side: order.SideBuy, QuantityMW: 5,  LimitPrice: 45})
-	s.Create(order.CreateOrderRequest{Node: "HB_SOUTH", Side: order.SideBuy, QuantityMW: 8,  LimitPrice: 42})
+	if _, err := s.Create(order.CreateOrderRequest{Node: "HB_NORTH", Side: order.SideBuy, QuantityMW: 10, LimitPrice: 50}); err != nil { t.Fatalf("create1: %v", err) }
+	if _, err := s.Create(order.CreateOrderRequest{Node: "HB_NORTH", Side: order.SideBuy, QuantityMW: 5, LimitPrice: 45}); err != nil { t.Fatalf("create2: %v", err) }
+	if _, err := s.Create(order.CreateOrderRequest{Node: "HB_SOUTH", Side: order.SideBuy, QuantityMW: 8, LimitPrice: 42}); err != nil { t.Fatalf("create3: %v", err) }
 	orders, err := s.ListPendingByNode("HB_NORTH")
 	if err != nil { t.Fatalf("list: %v", err) }
 	if len(orders) != 2 { t.Errorf("want 2 got %d", len(orders)) }
