@@ -2,7 +2,7 @@
 
 Energy trading infrastructure: ERCOT LMP data feed (or OU simulation fallback), automated strategy execution across 3 nodes, full order/risk lifecycle, and real-time observability via Prometheus + Grafana. Built as a learning exercise in the daily workflow of an energy trading systems developer.
 
-**v0.12.0** — 18 Docker services · 3 strategy types · 9 strategy instances · 83 tests · all CI green
+**v0.12.0** — 18 Docker services · 3 strategy types · 9 strategy instances · 87 tests · all CI green
 
 ---
 
@@ -191,7 +191,7 @@ cd risk-svc/build && ctest --output-on-failure
 ### Go
 
 ```bash
-# order-svc — 8 tests (requires running postgres)
+# order-svc — 12 tests (requires running postgres)
 cd order-svc
 TEST_DATABASE_URL="postgresql://$(whoami)@localhost:5432/trade_infra_test?sslmode=disable" \
 go test ./... -v
@@ -216,7 +216,7 @@ uv run ruff check .
 uv run pytest tests/ -v   # 27 tests
 ```
 
-**Total: 83 tests** — 6 Rust tick-engine · 9 Rust risk-calc-rs · 5 C++ market-data · 9 C++ risk-calc · 8 Go order · 6 Go risk · 13 Go strategy-engine · 27 Python
+**Total: 87 tests** — 6 Rust tick-engine · 9 Rust risk-calc-rs · 5 C++ market-data · 9 C++ risk-calc · 12 Go order · 6 Go risk · 13 Go strategy-engine · 27 Python
 
 ---
 
