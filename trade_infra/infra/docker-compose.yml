@@ -177,6 +177,32 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
+  spread-arb-nw:
+    build:
+      context: ../python
+      dockerfile: Dockerfile.strategy
+    command: uv run python strategies/spread_arb.py --node-a HB_NORTH --node-b HB_WEST
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/trade_infra?sslmode=disable
+      PYTHONUNBUFFERED: "1"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  spread-arb-sw:
+    build:
+      context: ../python
+      dockerfile: Dockerfile.strategy
+    command: uv run python strategies/spread_arb.py --node-a HB_SOUTH --node-b HB_WEST
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/trade_infra?sslmode=disable
+      PYTHONUNBUFFERED: "1"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
   strategy-engine:
     build:
       context: ../strategy-engine

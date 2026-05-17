@@ -90,12 +90,15 @@ INSERT INTO strategy_configs (strategy, node, param_key, param_value) VALUES
     ('ma_crossover',   'HB_WEST',  'quantity_mw',  '4.0')
 ON CONFLICT DO NOTHING;
 
--- Spread-arb strategy config (HB_NORTH / HB_SOUTH pair)
+-- Spread-arb strategy config (HB_NORTH / HB_SOUTH / HB_WEST)
 INSERT INTO strategy_configs (strategy, node, param_key, param_value) VALUES
     ('spread_arb', 'HB_NORTH', 'window',       '20'),
     ('spread_arb', 'HB_NORTH', 'threshold',    '1.5'),
     ('spread_arb', 'HB_NORTH', 'quantity_mw',  '5.0'),
     ('spread_arb', 'HB_SOUTH', 'window',       '20'),
     ('spread_arb', 'HB_SOUTH', 'threshold',    '1.5'),
-    ('spread_arb', 'HB_SOUTH', 'quantity_mw',  '5.0')
+    ('spread_arb', 'HB_SOUTH', 'quantity_mw',  '5.0'),
+    ('spread_arb', 'HB_WEST',  'window',       '20'),
+    ('spread_arb', 'HB_WEST',  'threshold',    '1.5'),
+    ('spread_arb', 'HB_WEST',  'quantity_mw',  '4.0')
 ON CONFLICT DO NOTHING;
