@@ -1,0 +1,60 @@
+name: risk-svc
+
+on:
+  push:
+    paths: ["trade_infra/risk-svc/**"]
+  pull_request:
+    paths: ["trade_infra/risk-svc/**"]
+
+jobs:
+  cpp-tests:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: trade_infra
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure and build
+        run: |
+          cmake -B risk-svc/build -S risk-svc
+          cmake --build risk-svc/build --target test_riskcalc -j4
+      - name: Run C++ tests
+        run: cd risk-svc/build && ctest --output-on-failure
+
+  go-tests:
+    runs-on: ubuntu-latest
+    needs: cpp-tests
+    defaults:
+      run:
+        working-directory: trade_infra
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: trade_infra_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-retries 10
+        ports: ["5432:5432"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26"
+
+      - name: Build libriskcalc
+        run: |
+          cmake -B risk-svc/build -S risk-svc
+          cmake --build risk-svc/build --target riskcalc -j4
+
+      - name: Apply schema
+        run: psql postgresql://postgres:postgres@localhost:5432/trade_infra_test -f sql/schema.sql
+
+      - name: Run Go tests
+        working-directory: trade_infra/risk-svc
+        env:
+          TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/trade_infra_test?sslmode=disable
+        run: go test ./internal/risk/... -v

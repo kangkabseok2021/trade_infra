@@ -2,13 +2,16 @@ name: market-data-svc
 
 on:
   push:
-    paths: ["market-data-svc/**"]
+    paths: ["trade_infra/market-data-svc/**"]
   pull_request:
-    paths: ["market-data-svc/**"]
+    paths: ["trade_infra/market-data-svc/**"]
 
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: trade_infra
     steps:
       - uses: actions/checkout@v4
       - name: Install libpq-dev
@@ -22,6 +25,9 @@ jobs:
 
   rust-tests:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: trade_infra
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable

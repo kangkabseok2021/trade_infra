@@ -2,13 +2,16 @@ name: python
 
 on:
   push:
-    paths: ["python/**"]
+    paths: ["trade_infra/python/**"]
   pull_request:
-    paths: ["python/**"]
+    paths: ["trade_infra/python/**"]
 
 jobs:
   test:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: trade_infra
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v3
