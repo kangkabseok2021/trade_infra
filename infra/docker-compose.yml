@@ -1,0 +1,283 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: trade_infra
+    ports: ["5433:5432"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      retries: 10
+    volumes:
+      - ../sql/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+
+  market-data-svc:
+    build:
+      context: ../market-data-svc
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/trade_infra?sslmode=disable
+      NODE_NAME: HB_NORTH
+      BASE_LMP: "45.0"
+      VOLATILITY: "5.0"
+      INTERVAL_MS: "1000"
+      METRICS_PORT: "9101"
+      ERCOT_REPLAY_DATE: "2024-01-15"
+      ERCOT_API_KEY: ""
+    ports: ["9101:9101"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  market-data-svc-south:
+    build:
+      context: ../market-data-svc
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/trade_infra?sslmode=disable
+      NODE_NAME: HB_SOUTH
+      BASE_LMP: "42.0"
+      VOLATILITY: "7.0"
+      INTERVAL_MS: "1000"
+      METRICS_PORT: "9101"
+      ERCOT_REPLAY_DATE: "2024-01-15"
+      ERCOT_API_KEY: ""
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  market-data-svc-west:
+    build:
+      context: ../market-data-svc
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/trade_infra?sslmode=disable
+      NODE_NAME: HB_WEST
+      BASE_LMP: "38.0"
+      VOLATILITY: "6.0"
+      INTERVAL_MS: "1000"
+      METRICS_PORT: "9101"
+      ERCOT_REPLAY_DATE: "2024-01-15"
+      ERCOT_API_KEY: ""
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  order-svc:
+    build:
+      context: ../order-svc
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/trade_infra?sslmode=disable
+      API_ADDR: ":8080"
+      METRICS_ADDR: ":9102"
+    ports: ["18080:8080", "9102:9102"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  risk-svc:
+    build:
+      context: ../risk-svc
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/trade_infra?sslmode=disable
+      API_ADDR: ":8081"
+      METRICS_ADDR: ":9103"
+      RISK_POSITION_LIMIT_MW: "50"
+    ports: ["8081:8081", "9103:9103"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  mean-reversion:
+    build:
+      context: ../python
+      dockerfile: Dockerfile.strategy
+    command: uv run python strategies/mean_reversion.py --node HB_NORTH
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/trade_infra?sslmode=disable
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  ma-crossover:
+    build:
+      context: ../python
+      dockerfile: Dockerfile.strategy
+    command: uv run python strategies/ma_crossover.py --node HB_NORTH
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/trade_infra?sslmode=disable
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  mean-reversion-south:
+    build:
+      context: ../python
+      dockerfile: Dockerfile.strategy
+    command: uv run python strategies/mean_reversion.py --node HB_SOUTH
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/trade_infra?sslmode=disable
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  mean-reversion-west:
+    build:
+      context: ../python
+      dockerfile: Dockerfile.strategy
+    command: uv run python strategies/mean_reversion.py --node HB_WEST
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/trade_infra?sslmode=disable
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  ma-crossover-south:
+    build:
+      context: ../python
+      dockerfile: Dockerfile.strategy
+    command: uv run python strategies/ma_crossover.py --node HB_SOUTH
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/trade_infra?sslmode=disable
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  ma-crossover-west:
+    build:
+      context: ../python
+      dockerfile: Dockerfile.strategy
+    command: uv run python strategies/ma_crossover.py --node HB_WEST
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/trade_infra?sslmode=disable
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  spread-arb:
+    build:
+      context: ../python
+      dockerfile: Dockerfile.strategy
+    command: uv run python strategies/spread_arb.py --node-a HB_NORTH --node-b HB_SOUTH
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/trade_infra?sslmode=disable
+      PYTHONUNBUFFERED: "1"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  spread-arb-nw:
+    build:
+      context: ../python
+      dockerfile: Dockerfile.strategy
+    command: uv run python strategies/spread_arb.py --node-a HB_NORTH --node-b HB_WEST
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/trade_infra?sslmode=disable
+      PYTHONUNBUFFERED: "1"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  spread-arb-sw:
+    build:
+      context: ../python
+      dockerfile: Dockerfile.strategy
+    command: uv run python strategies/spread_arb.py --node-a HB_SOUTH --node-b HB_WEST
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/trade_infra?sslmode=disable
+      PYTHONUNBUFFERED: "1"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  momentum:
+    build:
+      context: ../python
+      dockerfile: Dockerfile.strategy
+    command: uv run python strategies/momentum.py --node HB_NORTH
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/trade_infra?sslmode=disable
+      PYTHONUNBUFFERED: "1"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  momentum-south:
+    build:
+      context: ../python
+      dockerfile: Dockerfile.strategy
+    command: uv run python strategies/momentum.py --node HB_SOUTH
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/trade_infra?sslmode=disable
+      PYTHONUNBUFFERED: "1"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  momentum-west:
+    build:
+      context: ../python
+      dockerfile: Dockerfile.strategy
+    command: uv run python strategies/momentum.py --node HB_WEST
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/trade_infra?sslmode=disable
+      PYTHONUNBUFFERED: "1"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  strategy-engine:
+    build:
+      context: ../strategy-engine
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/trade_infra?sslmode=disable
+      ORDER_SVC_URL: http://order-svc:8080
+      POSITION_LIMIT_MW: "40"
+      COOLDOWN_SECS: "30"
+      METRICS_ADDR: ":9104"
+    ports: ["9104:9104"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      order-svc:
+        condition: service_started
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:v2.51.0
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./slo_rules.yml:/etc/prometheus/slo_rules.yml
+    ports: ["19090:9090"]
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --web.enable-lifecycle
+
+  grafana:
+    image: grafana/grafana:10.4.0
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+    ports: ["13000:3000"]
+    depends_on: [prometheus]

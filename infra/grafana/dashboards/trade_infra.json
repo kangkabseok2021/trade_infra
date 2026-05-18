@@ -1,0 +1,54 @@
+{
+  "title": "trade_infra",
+  "uid": "trade-infra-main",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "10s",
+  "time": {"from": "now-1h", "to": "now"},
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Tick Ingestion Rate (ticks/s)",
+      "gridPos": {"x": 0, "y": 0, "w": 6, "h": 4},
+      "datasource": "Prometheus",
+      "targets": [{"datasource": "Prometheus", "expr": "rate(market_data_tick_total[1m])", "legendFormat": "ticks/s", "refId": "A"}]
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Orders Filled (total)",
+      "gridPos": {"x": 6, "y": 0, "w": 6, "h": 4},
+      "datasource": "Prometheus",
+      "targets": [{"datasource": "Prometheus", "expr": "order_svc_orders_filled_total", "legendFormat": "fills", "refId": "A"}]
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Limit Breaches (total)",
+      "gridPos": {"x": 12, "y": 0, "w": 6, "h": 4},
+      "datasource": "Prometheus",
+      "targets": [{"datasource": "Prometheus", "expr": "risk_svc_limit_breaches_total", "legendFormat": "breaches", "refId": "A"}]
+    },
+    {
+      "id": 4,
+      "type": "timeseries",
+      "title": "Order Evaluation Latency p99",
+      "gridPos": {"x": 0, "y": 4, "w": 12, "h": 8},
+      "datasource": "Prometheus",
+      "targets": [{"datasource": "Prometheus", "expr": "histogram_quantile(0.99, rate(order_svc_eval_latency_seconds_bucket[5m]))", "legendFormat": "p99", "refId": "A"}]
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "Service Availability",
+      "gridPos": {"x": 12, "y": 4, "w": 12, "h": 8},
+      "datasource": "Prometheus",
+      "targets": [
+        {"datasource": "Prometheus", "expr": "up{job=\"market-data-svc\"}", "legendFormat": "market-data-svc", "refId": "A"},
+        {"datasource": "Prometheus", "expr": "up{job=\"order-svc\"}",       "legendFormat": "order-svc",       "refId": "B"},
+        {"datasource": "Prometheus", "expr": "up{job=\"risk-svc\"}",        "legendFormat": "risk-svc",        "refId": "C"}
+      ]
+    }
+  ]
+}

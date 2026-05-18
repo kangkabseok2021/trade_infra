@@ -1,0 +1,31 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  - slo_rules.yml
+
+scrape_configs:
+  - job_name: market-data-svc
+    static_configs:
+      - targets: ["market-data-svc:9101"]
+
+  - job_name: order-svc
+    static_configs:
+      - targets: ["order-svc:9102"]
+
+  - job_name: risk-svc
+    static_configs:
+      - targets: ["risk-svc:9103"]
+
+  - job_name: strategy-engine
+    static_configs:
+      - targets: ["strategy-engine:9104"]
+
+  - job_name: market-data-svc-south
+    static_configs:
+      - targets: ["market-data-svc-south:9101"]
+
+  - job_name: market-data-svc-west
+    static_configs:
+      - targets: ["market-data-svc-west:9101"]
